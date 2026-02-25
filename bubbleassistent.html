@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Dev Assistant - Guia de Padronização</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bubble: '#0B24FB',
+                        dark: '#121212',
+                        darker: '#0a0a0a',
+                        panel: '#1E1E1E',
+                        panelHover: '#2A2A2A'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        .checkbox-custom:checked + div {
+            background-color: #0B24FB;
+            border-color: #0B24FB;
+        }
+        .checkbox-custom:checked + div svg {
+            display: block;
+        }
+        .task-done {
+            opacity: 0.4;
+        }
+        .task-done .task-text {
+            text-decoration: line-through;
+            color: #6b7280; /* text-gray-500 */
+        }
+    </style>
+</head>
+<body class="bg-darker text-gray-200 font-sans h-screen flex overflow-hidden selection:bg-bubble selection:text-white">
+
+    <!-- Sidebar (Left) -->
+    <aside class="w-64 bg-dark border-r border-gray-800 flex flex-col z-20">
+        <div class="p-6 border-b border-gray-800 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-bubble flex items-center justify-center font-bold text-white shadow-lg shadow-bubble/20">B</div>
+            <div>
+                <h1 class="text-white font-bold text-sm tracking-wide uppercase">Bubble Assistant</h1>
+                <p class="text-xs text-gray-500">Padrões & UI | Cazin</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-4 space-y-2" id="category-nav">
+            <!-- Categories injected by JS -->
+        </nav>
+
+        <div class="p-5 border-t border-gray-800 bg-darker text-xs text-gray-400">
+            <p class="font-bold text-red-400 mb-2 flex items-center gap-2"><i class="fas fa-exclamation-circle"></i> REGRA DE OURO</p>
+            <p class="leading-relaxed">Todo o desenvolvimento deve ser em <strong class="text-white">INGLÊS</strong> (Nomes, DB, Custom States, Comentários).</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-darker">
+        <!-- Topbar -->
+        <header class="h-16 border-b border-gray-800 flex items-center justify-between px-8 bg-dark/80 backdrop-blur-sm z-10 sticky top-0">
+            <div class="flex items-center gap-4">
+                <h2 class="text-lg font-medium text-white" id="current-category-title">Categoria</h2>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <!-- Progress Bar (Only visible when checklist is active) -->
+                <div id="progress-container" class="flex items-center gap-3 hidden transition-opacity duration-300">
+                    <div class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Progresso</div>
+                    <div class="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-bubble transition-all duration-500 ease-out w-0"></div>
+                    </div>
+                    <span id="progress-text" class="text-xs font-bold text-white w-8 text-right">0%</span>
+                </div>
+
+                <!-- Reference Toggle Button -->
+                <button id="toggle-reference-btn" class="flex items-center gap-2 px-4 py-2 bg-panel hover:bg-panelHover border border-gray-700 hover:border-gray-500 rounded-lg text-sm text-gray-300 transition-all">
+                    <i class="fas fa-book-open text-bubble"></i> Guia Rápido
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Area -->
+        <div class="flex-1 overflow-y-auto p-8 relative">
+            <div class="max-w-4xl mx-auto">
+                
+                <!-- View 1: Items Grid (Replaces Dropdown) -->
+                <div id="items-view" class="space-y-6">
+                    <div class="mb-2">
+                        <h3 class="text-2xl font-semibold text-white mb-1">O que você está construindo?</h3>
+                        <p class="text-gray-400 text-sm">Selecione um elemento para visualizar as regras e o checklist de padronização.</p>
+                    </div>
+                    <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Cards injected by JS -->
+                    </div>
+                </div>
+
+                <!-- View 2: Checklist -->
+                <div id="checklist-view" class="hidden animate-[fadeIn_0.3s_ease-out]">
+                    <button id="back-btn" class="mb-6 flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors group">
+                        <i class="fas fa-arrow-left transform group-hover:-translate-x-1 transition-transform"></i> Voltar para opções
+                    </button>
+
+                    <div class="bg-dark border border-gray-800 rounded-xl p-8 shadow-2xl">
+                        <div class="flex items-center justify-between border-b border-gray-800 pb-6 mb-6">
+                            <div>
+                                <h3 id="checklist-title" class="text-xl font-bold text-white flex items-center gap-3">
+                                    <i class="fas fa-tasks text-bubble"></i> Título
+                                </h3>
+                                <p class="text-sm text-gray-500 mt-1">Siga os passos abaixo para garantir a padronização.</p>
+                            </div>
+                            <button id="reset-btn" class="px-4 py-2 bg-gray-800/50 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg text-sm transition-colors flex items-center gap-2 border border-gray-700">
+                                <i class="fas fa-redo-alt text-xs"></i> Limpar
+                            </button>
+                        </div>
+
+                        <div id="tasks-list" class="space-y-3">
+                            <!-- Tasks injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay Backdrop -->
+    <div id="drawer-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity opacity-0"></div>
+
+    <!-- Right Drawer: Quick Reference / Cheat Sheet -->
+    <aside id="reference-drawer" class="fixed inset-y-0 right-0 w-96 bg-dark border-l border-gray-800 transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col shadow-2xl">
+        <div class="p-6 border-b border-gray-800 flex items-center justify-between bg-panel/50">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <i class="fas fa-book-open text-bubble"></i> Guia Rápido (Cheat Sheet)
+            </h3>
+            <button id="close-reference-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 space-y-8">
+            <!-- Cheat Sheet: Naming -->
+            <div>
+                <h4 class="font-semibold text-gray-300 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-tag text-gray-500"></i> Prefixos UI
+                </h4>
+                <div class="bg-panel rounded-xl border border-gray-800 overflow-hidden">
+                    <ul class="text-sm divide-y divide-gray-800">
+                        <li class="p-3 flex items-center justify-between hover:bg-panelHover transition-colors"><span class="font-mono text-gray-300"><span class="text-bubble font-bold">g</span> NAME</span> <span class="text-xs text-gray-500">Grupo</span></li>
+                        <li class="p-3 flex items-center justify-between hover:bg-panelHover transition-colors"><span class="font-mono text-gray-300"><span class="text-bubble font-bold">rg</span> NAME</span> <span class="text-xs text-gray-500">Repeating Group</span></li>
+                        <li class="p-3 flex items-center justify-between hover:bg-panelHover transition-colors"><span class="font-mono text-gray-300"><span class="text-bubble font-bold">in</span> NAME</span> <span class="text-xs text-gray-500">Input</span></li>
+                        <li class="p-3 flex items-center justify-between hover:bg-panelHover transition-colors"><span class="font-mono text-gray-300"><span class="text-bubble font-bold">dd</span> NAME</span> <span class="text-xs text-gray-500">Dropdown</span></li>
+                        <li class="p-3 flex items-center justify-between hover:bg-panelHover transition-colors"><span class="font-mono text-gray-300"><span class="text-bubble font-bold">btn</span> NAME</span> <span class="text-xs text-gray-500">Botão</span></li>
+                        <li class="p-3 flex items-center justify-between hover:bg-panelHover transition-colors"><span class="font-mono text-gray-300"><span class="text-bubble font-bold">ico</span> NAME</span> <span class="text-xs text-gray-500">Ícone</span></li>
+                    </ul>
+                    <div class="p-3 bg-yellow-500/10 border-t border-yellow-500/20 text-yellow-500 text-xs flex gap-2">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <span>Sufixo <strong class="font-bold">(CS)</strong> obrigatório em grupos com Custom State.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cheat Sheet: Workflows -->
+            <div>
+                <h4 class="font-semibold text-gray-300 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-bolt text-gray-500"></i> Cores Workflows
+                </h4>
+                <div class="bg-panel rounded-xl border border-gray-800 p-2">
+                    <ul class="text-sm space-y-1">
+                        <li class="flex items-center justify-between p-2 rounded hover:bg-panelHover transition-colors"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div> <span class="font-mono text-gray-300">nav</span></div> <span class="text-xs text-gray-500">Navegação</span></li>
+                        <li class="flex items-center justify-between p-2 rounded hover:bg-panelHover transition-colors"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]"></div> <span class="font-mono text-gray-300">pp_hide</span></div> <span class="text-xs text-gray-500">Cancelar/Fechar</span></li>
+                        <li class="flex items-center justify-between p-2 rounded hover:bg-panelHover transition-colors"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]"></div> <span class="font-mono text-gray-300">upd</span></div> <span class="text-xs text-gray-500">Editar</span></li>
+                        <li class="flex items-center justify-between p-2 rounded hover:bg-panelHover transition-colors"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div> <span class="font-mono text-gray-300">del</span></div> <span class="text-xs text-gray-500">Deletar</span></li>
+                        <li class="flex items-center justify-between p-2 rounded hover:bg-panelHover transition-colors"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div> <span class="font-mono text-gray-300">crt</span></div> <span class="text-xs text-gray-500">Criar</span></li>
+                        <li class="flex items-center justify-between p-2 rounded hover:bg-panelHover transition-colors"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]"></div> <span class="font-mono text-gray-300">Sys</span></div> <span class="text-xs text-gray-500">Sistema (Loaded)</span></li>
+                        <li class="flex items-center justify-between p-2 rounded hover:bg-panelHover transition-colors"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-yellow-600 shadow-[0_0_8px_rgba(202,138,4,0.5)]"></div> <span class="font-mono text-gray-300">stt</span></div> <span class="text-xs text-gray-500">Custom States</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script>
+        // Data Structure mapping the Standardization Guide (100% Completo)
+        const rulesData = {
+            ui: {
+                title: "Elementos de UI",
+                icon: "fa-desktop",
+                items: {
+                    group: {
+                        name: "Grupo (Group)",
+                        desc: "Containers, cartões e agrupadores estruturais.",
+                        tasks: [
+                            "Nome do elemento em INGLÊS, máximo 3 palavras.",
+                            "Aplicar prefixo: <strong>g NAME</strong> (Ex: g PROJECT DETAILS).",
+                            "O grupo possui Custom States? Se sim, adicionar sufixo: <strong>g NAME (CS)</strong>.",
+                            "Se tem Custom State, o nome deve ser <strong>snake_case</strong> (Ex: is_load, current_step).",
+                            "Ajustar Padding interno (Verificar Style Guide para múltiplos de 4/8).",
+                            "<strong>NUNCA usar Margin.</strong> O espaçamento externo deve ser controlado exclusivamente pelo 'Gap' do grupo pai.",
+                            "Verificar tipo de conteúdo (Type of content) e Data source, se aplicável."
+                        ]
+                    },
+                    repeating_group: {
+                        name: "Repeating Group",
+                        desc: "Listas de dados dinâmicas e tabelas.",
+                        tasks: [
+                            "Nome do elemento em INGLÊS, máximo 3 palavras.",
+                            "Aplicar prefixo: <strong>rg NAME</strong> (Ex: rg CONTRACTS).",
+                            "Definir layout (Row, Column, Wrap) e desativar altura fixa se for dinâmico.",
+                            "Vincular Type of Content (Tabela em plural, ex: Users).",
+                            "Vincular Data Source e garantir filtros por segurança/privacidade.",
+                            "Adicionar estado 'Empty State' se não houver dados (usar Boilerplate).",
+                            "Configurar paginação se for uma lista longa."
+                        ]
+                    },
+                    button: {
+                        name: "Botão (Button)",
+                        desc: "Ações primárias, secundárias e links.",
+                        tasks: [
+                            "Nome do elemento em INGLÊS, máximo 3 palavras.",
+                            "Aplicar prefixo: <strong>btn NAME</strong> (Ex: btn SAVE).",
+                            "Aplicar classes do Style Guide Global (Cor primária/secundária).",
+                            "Configurar estado Condicional: Hover (mudança de cor).",
+                            "Configurar estado Condicional: Disabled (desativado quando input vazio).",
+                            "Vincular ação de Loading (Ex: this button is pressed -> text = 'Loading...', ou ícone)."
+                        ]
+                    },
+                    input: {
+                        name: "Input / Dropdown",
+                        desc: "Campos de formulário e seleção.",
+                        tasks: [
+                            "Nome do elemento em INGLÊS, máximo 3 palavras.",
+                            "Prefixo Input: <strong>in NAME</strong> | Prefixo Dropdown: <strong>dd NAME</strong>.",
+                            "Definir Placeholder claro (em inglês ou idioma do app).",
+                            "Definir Content Format correto (Text, Email, Password, Integer).",
+                            "Vincular Padding/Height padrão do Style Guide.",
+                            "Adicionar condicional de borda vermelha em caso de erro/inválido."
+                        ]
+                    },
+                    styles: {
+                        name: "Estilos Globais (Styles)",
+                        desc: "Design tokens e padronização visual.",
+                        tasks: [
+                            "<strong>PROIBIDO INLINE STYLING:</strong> Nunca desanexe o estilo de um elemento (botão de 'Remove style').",
+                            "Utilizar sempre a aba 'Styles' nativa ou os 'Design Tokens' (Variables) do Bubble para cores, fontes e bordas.",
+                            "Garantir consistência global. Se um botão secundário precisar mudar de cor, mude no Style Guide, não no elemento isolado."
+                        ]
+                    },
+                    page: {
+                        name: "Página (Page)",
+                        desc: "Estrutura raiz da tela.",
+                        tasks: [
+                            "Nome da página em INGLÊS, minúsculo.",
+                            "Máximo 2 palavras no nome (Ex: dashboard_user, project_details).",
+                            "Page width definido padrão para 1280px (Style Guide).",
+                            "Adicionar Menu Lateral e Header do Boilerplate.",
+                            "Assegurar que o título dinâmico da página (Page Title) está configurado."
+                        ]
+                    }
+                }
+            },
+            layout: {
+                title: "Responsividade & Layout",
+                icon: "fa-compress-arrows-alt",
+                items: {
+                    containers: {
+                        name: "Tipos de Container",
+                        desc: "Alinhamento e direção do Flexbox.",
+                        tasks: [
+                            "Evitar o uso de layout 'Fixed'. Prefira sempre 'Row', 'Column' ou 'Align to parent'.",
+                            "Usar 'Column' para elementos que devem empilhar verticalmente (um debaixo do outro).",
+                            "Usar 'Row' para elementos que devem ficar horizontalmente (lado a lado).",
+                            "Usar 'Align to parent' APENAS quando precisar sobrepor elementos (ex: um ícone de 'fechar' no canto superior de um banner)."
+                        ]
+                    },
+                    width_rules: {
+                        name: "Regras de Largura (Width)",
+                        desc: "Comportamento horizontal adaptativo.",
+                        tasks: [
+                            "Desmarcar 'Make element fixed width' na grande maioria dos elementos para garantir fluidez responsiva.",
+                            "Ativar 'Fit width to content' para botões, tags, ícones ou textos curtos que devem abraçar o próprio conteúdo sem sobrar espaço.",
+                            "Definir um 'Min width' (ex: 280px ou 320px) para evitar que elementos colapsem ou quebrem o layout em ecrãs de telemóveis.",
+                            "Utilizar 'Max width' para limitar a expansão excessiva em monitores grandes (ex: textos longos não devem ultrapassar 700px/800px para garantir a legibilidade)."
+                        ]
+                    },
+                    height_rules: {
+                        name: "Regras de Altura (Height)",
+                        desc: "Comportamento vertical dinâmico.",
+                        tasks: [
+                            "Evitar altura fixa ('Fixed height') em grupos com conteúdo dinâmico (como textos multilinhas e listas) para que o conteúdo não vaze/corte.",
+                            "Ativar 'Fit height to content' em Textos, Repeating Groups e nos Grupos 'Wrapper' (Grupos Pai) para que cresçam verticalmente de forma automática acompanhando os dados.",
+                            "Deixar um 'Min height' configurado (ex: 50px ou 100px) apenas para facilitar o clique e a edição no Bubble Editor (não afeta a responsividade se o 'Fit height' estiver ativo)."
+                        ]
+                    },
+                    spacing: {
+                        name: "Espaçamentos e Gaps",
+                        desc: "Respiro entre os elementos.",
+                        tasks: [
+                            "<strong>PROIBIDO USAR MARGINS:</strong> Nunca utilize a propriedade margin em nenhum elemento. Margens quebram a consistência do flexbox moderno.",
+                            "Usar EXCLUSIVAMENTE a opção 'Apply gap spacing between elements' nos containers pai (Row/Column) para separar os elementos filhos.",
+                            "Garantir que os Paddings (espaço interno das bordas) sigam rigorosamente a escala de múltiplos de 4/8px definida no Style Guide (ex: 8px, 16px, 24px, 32px)."
+                        ]
+                    }
+                }
+            },
+            database: {
+                title: "Banco de Dados",
+                icon: "fa-database",
+                items: {
+                    table: {
+                        name: "Nova Tabela (Data Type)",
+                        desc: "Criação de novas coleções de dados.",
+                        tasks: [
+                            "Nome da tabela em INGLÊS.",
+                            "Formato: <strong>snake_case + plural</strong> (Ex: users, projects, tasks).",
+                            "Garantir campos padrão: created_at, updated_at, deleted_at (se o Bubble não for suficiente)."
+                        ]
+                    },
+                    field: {
+                        name: "Novo Campo (Field)",
+                        desc: "Criação de colunas nas tabelas.",
+                        tasks: [
+                            "Nome do campo em INGLÊS.",
+                            "Formato: <strong>snake_case</strong> (Ex: full_name, user_id).",
+                            "Se for booleano (yes/no), usar prefixo <strong>is_</strong> (Ex: is_active, is_deleted).",
+                            "Se for Status (Option set), nomear como 'status'.",
+                            "IMPORTANTE: Relacionamentos com outras tabelas devem puxar o <strong>Objeto Completo</strong> (Ex: assigned_user tipo User, NÃO assigned_user_id tipo texto)."
+                        ]
+                    },
+                    privacy: {
+                        name: "Privacy Rules & Segurança",
+                        desc: "Proteção contra vazamento de dados.",
+                        tasks: [
+                            "Configurar Privacy Rules rigorosas para cada tabela criada.",
+                            "Garantir que usuários só consigam encontrar ('Find in searches') dados que lhes pertencem.",
+                            "Restringir campos sensíveis (como e-mail ou senhas) para não irem ao front-end de outros usuários.",
+                            "<strong>Auto-binding:</strong> Usar com extremo cuidado. Exige Privacy Rules perfeitamente configuradas para evitar edição não autorizada.",
+                            "Esconder um elemento no UI não protege os dados. A segurança real deve estar sempre na aba 'Privacy'."
+                        ]
+                    },
+                    option_sets: {
+                        name: "Option Sets",
+                        desc: "Dados fixos e listagens pré-definidas.",
+                        tasks: [
+                            "Sempre usar Option Sets para dados estáticos globais (Ex: Status de pedido, Dias da semana, Tipos de Usuário, Categorias fixas).",
+                            "NUNCA crie tabelas no banco de dados para dados que não mudam. Option Sets são carregados instantaneamente no client-side e não consomem WUs em buscas."
+                        ]
+                    }
+                }
+            },
+            performance: {
+                title: "Performance & Otimização",
+                icon: "fa-rocket",
+                items: {
+                    filters: {
+                        name: "Filtros e Buscas",
+                        desc: "Otimização de queries pesadas.",
+                        tasks: [
+                            "<strong>SERVER-SIDE:</strong> Sempre aplicar filtros diretamente no 'Do a search for' usando as Constraints (Ex: status = active).",
+                            "<strong>EVITE ADVANCED FILTERS:</strong> O uso do ':filtered' seguido de 'Advanced' roda no Client-side (navegador). O Bubble baixa todo o banco para depois filtrar, causando enorme lentidão.",
+                            "<strong>NÃO BUSCAR EM CÉLULAS:</strong> Evite ao máximo colocar 'Do a search for' dentro de células de Repeating Groups (Isso multiplica as chamadas ao servidor pelo número de itens).",
+                            "<strong>PAGINAÇÃO:</strong> Limite o volume de dados exibidos usando ':items until #' ou implemente paginação no Repeating Group.",
+                            "<strong>EVITE :COUNT:</strong> Não use ':count' em listas de banco muito grandes. Prefira criar um campo numérico na tabela (ex: 'total_views' tipo number) e fazer '+1' no workflow."
+                        ]
+                    },
+                    data_structure: {
+                        name: "Estrutura e Listas",
+                        desc: "Como montar relações performáticas.",
+                        tasks: [
+                            "Evitar campos do tipo 'List of...' se a lista puder ultrapassar 100 itens. O Bubble carrega todos os itens de uma lista automaticamente.",
+                            "Para listas grandes (>100 itens), inverta a relação: crie uma tabela auxiliar (Ex: 'User_Teams') e utilize 'Do a search for' para puxar os dados correspondentes.",
+                            "Use Privacy Rules. Elas não são apenas segurança, elas otimizam o app bloqueando o envio de dados desnecessários pela rede."
+                        ]
+                    }
+                }
+            },
+            workflows: {
+                title: "Workflows",
+                icon: "fa-project-diagram",
+                items: {
+                    navigation: {
+                        name: "Navegação",
+                        desc: "Redirecionamento entre páginas.",
+                        tasks: [
+                            "Nome da pasta do Workflow: <strong>nav ACTION</strong> (Ex: nav NEXT PARTICIPANT).",
+                            "Cor da pasta: <strong>Azul Claro</strong>.",
+                            "Agrupar pelo contexto da funcionalidade, NÃO agrupar botões aleatórios juntos.",
+                            "Enviar parâmetros na URL se necessário."
+                        ]
+                    },
+                    crud: {
+                        name: "Criar / Editar / Deletar",
+                        desc: "Manipulação de registros (CRUD).",
+                        tasks: [
+                            "Prefixo Criar: <strong>crt NOME</strong> | Cor: <strong>Verde</strong>.",
+                            "Prefixo Editar: <strong>upd NOME</strong> | Cor: <strong>Roxo</strong>.",
+                            "Prefixo Deletar: <strong>del NOME</strong> | Cor: <strong>Vermelho</strong>.",
+                            "Adicionar estado de loading no botão que aciona a ação.",
+                            "Adicionar tratamento de erro (Alert ou Popup padrão de erro).",
+                            "Após concluir, resetar inputs (se form) ou fechar popup (cor Laranja)."
+                        ]
+                    },
+                    custom_events: {
+                        name: "Custom Events",
+                        desc: "Ações repetitivas ou complexas.",
+                        tasks: [
+                            "<strong>Aplicar DRY (Don't Repeat Yourself):</strong> Se a mesma sequência de ações acontece em mais de um lugar, transforme num Custom Event.",
+                            "Utilizar 'Trigger a custom event' para organizar lógicas complexas e manter o workflow limpo e legível.",
+                            "Se o evento interage com a base de dados pesada, considere enviá-lo para um Backend Workflow em vez de usar um Custom Event de front-end."
+                        ]
+                    },
+                    custom_state: {
+                        name: "Custom States",
+                        desc: "Estados temporários de interface.",
+                        tasks: [
+                            "Nome da pasta: <strong>stt ACTION</strong> (Ex: stt CHECKBOX BILINGUAL).",
+                            "Cor da pasta: <strong>Marrom</strong>.",
+                            "Verificar se o valor passado segue a tipagem correta.",
+                            "Garantir que o Custom State está no elemento pai mais próximo (não no App/Index)."
+                        ]
+                    },
+                    popup: {
+                        name: "Modais e Popups",
+                        desc: "Abertura e fechamento de elementos flutuantes.",
+                        tasks: [
+                            "Mostrar Popup: <strong>pp_show NAME</strong> | Cor: <strong>Azul Claro</strong>.",
+                            "Fechar Popup: <strong>pp_hide NAME</strong> | Cor: <strong>Laranja</strong>.",
+                            "Resetar os dados do popup/grupo ao fechar."
+                        ]
+                    },
+                    backend: {
+                        name: "Backend Workflows",
+                        desc: "Processamento no servidor.",
+                        tasks: [
+                            "Processamentos pesados (alterações em múltiplas linhas do banco, chamadas de API externas demoradas) DEVEM ser movidos para Backend Workflows.",
+                            "Não travar a tela do usuário aguardando processamentos longos no client-side (navegador).",
+                            "Usar a ação 'Schedule API Workflow' para rodar esses processos em segundo plano de forma assíncrona."
+                        ]
+                    }
+                }
+            },
+            boilerplate: {
+                title: "Boilerplate & Padrões",
+                icon: "fa-recycle",
+                items: {
+                    components: {
+                        name: "Componentes Padrão",
+                        desc: "Elementos modulares reutilizáveis.",
+                        tasks: [
+                            "Telas de dados: Utilizar Skeleton padrão reutilizável antes de carregar o Repeating Group.",
+                            "Sem dados: Utilizar o componente de 'Empty State' padrão e reutilizável nas listas vazias.",
+                            "Botões e Ações: Aplicar botões reutilizáveis com animação de Load incluída.",
+                            "Feedbacks: Utilizar apenas o Popup de Erro padrão (Evitar alertas nativos de navegador).",
+                            "Navegação: Menu lateral e Header devem ser injetados como Reusable Elements."
+                        ]
+                    },
+                    pages: {
+                        name: "Padrões de Páginas",
+                        desc: "Estruturas de tela recorrentes.",
+                        tasks: [
+                            "A Tela de Login deve seguir ESTRITAMENTE o mesmo padrão já validado da plataforma.",
+                            "A Tela de Perfil/Profile deve seguir a organização padrão do Boilerplate.",
+                            "Tabelas densas devem SEMPRE possuir paginação padrão implementada."
+                        ]
+                    }
+                }
+            },
+            docs: {
+                title: "Documentação",
+                icon: "fa-file-alt",
+                items: {
+                    documentation: {
+                        name: "Gravar Documentação",
+                        desc: "Registro e transferência de conhecimento.",
+                        tasks: [
+                            "A lógica é complexa? Exige vídeo ou Doc.",
+                            "Se vídeo: Máximo 5 minutos.",
+                            "Vídeo aborda apenas UM tema específico.",
+                            "Nome do vídeo claro e link inserido na documentação oficial.",
+                            "Explicar função de cada Custom State utilizado.",
+                            "Adicionar comentários nos Workflows complexos dentro do Bubble."
+                        ]
+                    }
+                }
+            }
+        };
+
+        // State variables
+        let currentCategory = 'ui';
+        let currentItem = '';
+        let checkedTasks = new Set();
+        let totalTasks = 0;
+
+        // DOM Elements
+        const categoryNav = document.getElementById('category-nav');
+        const currentCategoryTitle = document.getElementById('current-category-title');
+        
+        // Views
+        const itemsView = document.getElementById('items-view');
+        const checklistView = document.getElementById('checklist-view');
+        const itemsGrid = document.getElementById('items-grid');
+        
+        // Checklist elements
+        const checklistTitle = document.getElementById('checklist-title');
+        const tasksList = document.getElementById('tasks-list');
+        const backBtn = document.getElementById('back-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        // Progress elements
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        // Drawer elements
+        const toggleRefBtn = document.getElementById('toggle-reference-btn');
+        const closeRefBtn = document.getElementById('close-reference-btn');
+        const refDrawer = document.getElementById('reference-drawer');
+        const drawerBackdrop = document.getElementById('drawer-backdrop');
+
+        // Initialize App
+        function init() {
+            renderCategories();
+            selectCategory('ui');
+            
+            backBtn.addEventListener('click', () => {
+                showItemsView();
+            });
+
+            resetBtn.addEventListener('click', () => {
+                checkedTasks.clear();
+                updateProgress();
+                renderChecklist();
+            });
+
+            // Drawer logic
+            toggleRefBtn.addEventListener('click', toggleDrawer);
+            closeRefBtn.addEventListener('click', toggleDrawer);
+            drawerBackdrop.addEventListener('click', toggleDrawer);
+        }
+
+        // Drawer Toggle Function
+        function toggleDrawer() {
+            const isClosed = refDrawer.classList.contains('translate-x-full');
+            if (isClosed) {
+                // Open
+                refDrawer.classList.remove('translate-x-full');
+                drawerBackdrop.classList.remove('hidden');
+                setTimeout(() => drawerBackdrop.classList.remove('opacity-0'), 10);
+            } else {
+                // Close
+                refDrawer.classList.add('translate-x-full');
+                drawerBackdrop.classList.add('opacity-0');
+                setTimeout(() => drawerBackdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        // Render Sidebar Categories
+        function renderCategories() {
+            categoryNav.innerHTML = '';
+            for (const [key, data] of Object.entries(rulesData)) {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
+                    currentCategory === key 
+                    ? 'bg-bubble text-white shadow-md' 
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`;
+                btn.innerHTML = `<i class="fas ${data.icon} w-5 text-center"></i> <span class="font-medium text-sm">${data.title}</span>`;
+                btn.onclick = () => selectCategory(key);
+                categoryNav.appendChild(btn);
+            }
+        }
+
+        // Select Category (Shows Grid)
+        function selectCategory(key) {
+            currentCategory = key;
+            currentItem = '';
+            
+            renderCategories(); // Update active state on sidebar
+            currentCategoryTitle.textContent = rulesData[key].title;
+            
+            showItemsView();
+            renderItemsGrid(key);
+        }
+
+        // Render Items Grid (Cards)
+        function renderItemsGrid(categoryKey) {
+            itemsGrid.innerHTML = '';
+            const items = rulesData[categoryKey].items;
+
+            for (const [itemKey, itemData] of Object.entries(items)) {
+                const card = document.createElement('button');
+                card.className = "bg-panel hover:bg-panelHover p-6 rounded-2xl border border-gray-800 hover:border-bubble/50 text-left transition-all duration-200 group flex flex-col h-full";
+                
+                card.innerHTML = `
+                    <h4 class="text-white font-semibold text-lg mb-2 group-hover:text-bubble transition-colors">${itemData.name}</h4>
+                    <p class="text-sm text-gray-500 mb-4 flex-1">${itemData.desc || 'Clique para ver as diretrizes.'}</p>
+                    <div class="flex items-center text-xs font-medium text-gray-600 group-hover:text-bubble/80 transition-colors mt-auto">
+                        <i class="fas fa-list-ul mr-2"></i> ${itemData.tasks.length} Tarefas
+                    </div>
+                `;
+                
+                card.onclick = () => selectItem(itemKey);
+                itemsGrid.appendChild(card);
+            }
+        }
+
+        // Navigate to Items View
+        function showItemsView() {
+            checklistView.classList.add('hidden');
+            itemsView.classList.remove('hidden');
+            progressContainer.classList.add('hidden');
+            progressContainer.classList.add('opacity-0');
+        }
+
+        // Select Item (Shows Checklist)
+        function selectItem(itemKey) {
+            currentItem = itemKey;
+            checkedTasks.clear();
+            
+            // UI transitions
+            itemsView.classList.add('hidden');
+            checklistView.classList.remove('hidden');
+            progressContainer.classList.remove('hidden');
+            setTimeout(() => progressContainer.classList.remove('opacity-0'), 50);
+
+            checklistTitle.innerHTML = `<i class="fas ${rulesData[currentCategory].icon} text-bubble mr-2"></i> ${rulesData[currentCategory].items[itemKey].name}`;
+            
+            renderChecklist();
+        }
+
+        // Render tasks based on selected item
+        function renderChecklist() {
+            if (!currentCategory || !currentItem) return;
+
+            const tasks = rulesData[currentCategory].items[currentItem].tasks;
+            totalTasks = tasks.length;
+            tasksList.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                const taskId = `task-${index}`;
+                const isChecked = checkedTasks.has(taskId);
+
+                const taskEl = document.createElement('label');
+                taskEl.className = `flex items-start gap-4 p-5 rounded-xl border cursor-pointer transition-all duration-200 shadow-sm ${
+                    isChecked 
+                    ? 'bg-darker border-gray-800 task-done' 
+                    : 'bg-panel border-gray-700 hover:border-gray-500 hover:bg-panelHover'
+                }`;
+                
+                taskEl.innerHTML = `
+                    <div class="relative flex items-center justify-center mt-0.5 flex-shrink-0">
+                        <input type="checkbox" id="${taskId}" class="checkbox-custom opacity-0 absolute w-full h-full cursor-pointer z-10" ${isChecked ? 'checked' : ''}>
+                        <div class="w-6 h-6 border-2 border-gray-500 rounded-md flex items-center justify-center transition-colors shadow-inner">
+                            <svg class="w-4 h-4 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                    </div>
+                    <div class="flex-1 text-sm text-gray-300 leading-relaxed task-text transition-colors duration-200 pt-0.5">${task}</div>
+                `;
+
+                // Event listener to toggle task
+                const checkbox = taskEl.querySelector('input');
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        checkedTasks.add(taskId);
+                    } else {
+                        checkedTasks.delete(taskId);
+                    }
+                    renderChecklist(); // Re-render to update styles
+                    updateProgress();
+                });
+
+                tasksList.appendChild(taskEl);
+            });
+            
+            updateProgress();
+        }
+
+        // Update Progress Bar
+        function updateProgress() {
+            if (totalTasks === 0) {
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                progressText.classList.remove('text-green-400');
+                progressText.classList.add('text-white');
+                return;
+            }
+
+            const percentage = Math.round((checkedTasks.size / totalTasks) * 100);
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}%`;
+
+            if (percentage === 100) {
+                progressText.classList.add('text-green-400');
+                progressText.classList.remove('text-white');
+                progressBar.classList.replace('bg-bubble', 'bg-green-500');
+            } else {
+                progressText.classList.remove('text-green-400');
+                progressText.classList.add('text-white');
+                progressBar.classList.replace('bg-green-500', 'bg-bubble');
+            }
+        }
+
+        // Start App
+        init();
+    </script>
+</body>
+</html>
